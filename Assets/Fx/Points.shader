@@ -61,9 +61,9 @@
 		//return float4(offset,0,1);
 		//return float4(dist,dist,dist,1);
 
-		float intesity = saturate(dot(col, float4(0.3, 0.4, 0.3, 0)));
+		float intensity = saturate(dot(col, float4(0.3, 0.4, 0.3, 0)));
 		
-		 float4 f = tex2D(_DotTex, float2(dist, 1 - intesity));
+		 float4 f = tex2D(_DotTex, float2(dist, 1 - intensity));
 		 return f;
 		 float w = f.r;
 		 return float4(w, w, w, 1);
@@ -71,7 +71,7 @@
 		/*
 		w *= 2;
 		//w *= w < 1;
-		//w = saturate(0.2+ .4*intesity - dist);
+		//w = saturate(0.2+ .4*intensity - dist);
 		const float std = 0.07;
 		const float PI = 3.1415;
 		w = exp(-w*w / (2 * std*std)) / sqrt(2 * std*std*PI);
@@ -88,7 +88,7 @@
 
 		//w *= w; // makes it apear square
 		//w = w > 0.1;	 //saturate(w);
-		//scol.a = intesity;
+		//scol.a = intensity;
 
 		float4 c = w*col;
 		//c.a = w;
