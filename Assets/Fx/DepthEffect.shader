@@ -53,9 +53,11 @@
 				// float x = depth*.02;
 				float x = 1-depth; // get white:near, black:far
 
-				float refDist = _ProjectionParams.z*frac(_Time.y*0.5);
-				// x = saturate(x-refDist);
-				x = pow(x,15.0);
+				// float refDist = _ProjectionParams.z*frac(_Time.y*0.5);
+				float refDist = 1/(_Time.y % 2);
+				refDist = refDist / (1+refDist); // Reinhard function
+				x = saturate(x-refDist);
+				// x = pow(x,15.0);
 				// x *= .1;
 				// x = x / (x+20);
 				// x = 0.1*abs(depth - refDist);
