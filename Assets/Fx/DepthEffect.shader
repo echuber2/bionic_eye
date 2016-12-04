@@ -51,12 +51,17 @@
 				// float x = depth % 1; // 1 m mod
 				// x = LinearEyeDepth(3);
 				// float x = depth*.02;
+				float timeval = frac((_Time.y+1)/1.5);
 				float x = 1-depth; // get white:near, black:far
+				float versionA;
+				float versionB;
+				float finalx;
 
 				// float refDist = _ProjectionParams.z*frac(_Time.y*0.5);
-				float refDist = 1/(frac((_Time.y+1)/1.5));
+				float refDist = 1/timeval;
 				refDist = refDist / (2+refDist); // Reinhard function
 				x = saturate(x-refDist);
+				versionA = x;
 				// x = pow(x,15.0);
 				// x *= .1;
 				// x = x / (x+20);
@@ -67,8 +72,15 @@
 
 				// const float far = _ProjectionParams.z;
 				// x = 1-(pow((1/depth),-0.4));
+				x = 1-depth;
+				timeval = 1/(timeval);
+				timeval *= 5;
+				x = pow(x,timeval);
+				versionB = x;
 
-				return float4(x, x, x, 1);
+				finalx = versionB; // versionA or versionB
+
+				return float4(finalx, finalx, finalx, 1);
 				//now with technicolor!!!
 				// return float4(depth, depth/10, 1/ depth, 1)%1;
 			}
