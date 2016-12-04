@@ -27,13 +27,13 @@ public class CameraDriver : MonoBehaviour {
             transform.position = follow.position;
             transform.rotation = follow.rotation;
 
-            // i don't know if this has anything to help prevent tering.
-            // also proably not timestamped
-            // I need to compesate for the latency by back positioning it.
+            // i don't know if this has anything to help prevent tearing.
+            // also probably not timestamped
+            // I need to compensate for the latency by back positioning it.
             // keep a record
             // start the pipeline
-            // want to use that sexy thing from ms...
+
         }
-            //fuck the worod.
+
 	}
 }

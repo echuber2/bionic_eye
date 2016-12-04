@@ -30,11 +30,13 @@
 				float4 vertex : SV_POSITION;
 			};
 
-			v2f vert (appdata v)
+			v2f vert (appdata vpos)
 			{
 				v2f o;
-				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
-				o.uv = v.uv;
+				o.vertex = mul(UNITY_MATRIX_MVP, vpos.vertex);
+				// o.uv = v.uv;
+				o.uv.x = vpos.uv.x;
+				o.uv.y = vpos.uv.y;
 				return o;
 			}
 			
@@ -44,18 +46,26 @@
 			fixed4 frag (v2f i) : SV_Target
 			{
 				float de = tex2D(_CameraDepthTexture, i.uv).r;
-				float depth = LinearEyeDepth(de);
-				float x = depth % 1; // 1 m mod
+				// float depth = LinearEyeDepth(de);
+				float depth = Linear01Depth(de);
+				// float x = depth % 1; // 1 m mod
+				// x = LinearEyeDepth(3);
+				// float x = depth*.02;
+				float x = 1-depth; // get white:near, black:far
 
-				float refDist = _ProjectionParams.z*frac(_Time.y * _Speed);
-				//x = saturate(depth - refDist);
-				x = 0.1*abs(depth - refDist);
+				float refDist = _ProjectionParams.z*frac(_Time.y*0.5);
+				// x = saturate(x-refDist);
+				x = pow(x,15.0);
+				// x *= .1;
+				// x = x / (x+20);
+				// x = 0.1*abs(depth - refDist);
 				
 				//x = saturate(depth*_Speed);
 				//x = pow(depth, _Speed);
+
 				return float4(x, x, x, 1);
 				//now with technicolor!!!
-				return float4(depth, depth/10, 1/ depth, 1)%1;
+				// return float4(depth, depth/10, 1/ depth, 1)%1;
 			}
 			ENDCG
 		}
