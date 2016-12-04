@@ -65,6 +65,9 @@
 				//x = saturate(depth*_Speed);
 				//x = pow(depth, _Speed);
 
+				// const float far = _ProjectionParams.z;
+				// x = 1-(pow((1/depth),-0.4));
+
 				return float4(x, x, x, 1);
 				//now with technicolor!!!
 				// return float4(depth, depth/10, 1/ depth, 1)%1;
