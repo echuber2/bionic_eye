@@ -43,6 +43,7 @@
 			sampler2D _MainTex;
 			sampler2D _CameraDepthTexture;
 			float _Speed;
+			int animateClipPlanes;
 			fixed4 frag (v2f i) : SV_Target
 			{
 				float de = tex2D(_CameraDepthTexture, i.uv).r;
@@ -55,10 +56,12 @@
 				float x = 1-depth; // get white:near, black:far
 				float versionA;
 				float versionB;
+				float versionC; // for animateClipPlanes
 				float finalx;
+				float refDist;
 
 				// float refDist = _ProjectionParams.z*frac(_Time.y*0.5);
-				float refDist = 1/timeval;
+				refDist = 1/timeval;
 				refDist = refDist / (2+refDist); // Reinhard function
 				x = saturate(x-refDist);
 				versionA = x;
@@ -77,8 +80,14 @@
 				timeval *= 5;
 				x = pow(x,timeval);
 				versionB = x;
+				
+				versionC = 1-depth;
 
-				finalx = versionB; // versionA or versionB
+				finalx = versionB; // versionA or versionB or versionC
+
+				if (animateClipPlanes == 1) {
+					finalx = versionC;
+				}
 
 				return float4(finalx, finalx, finalx, 1);
 				//now with technicolor!!!
