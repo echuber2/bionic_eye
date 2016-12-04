@@ -80,12 +80,14 @@
 				timeval *= 5;
 				x = pow(x,timeval);
 				versionB = x;
-				
-				versionC = 1-depth;
 
 				finalx = versionB; // versionA or versionB or versionC
 
 				if (animateClipPlanes == 1) {
+					x = 1-depth;
+					x = pow(1-depth,4);
+					// x = 3*x / (3+x);
+					versionC = x;
 					finalx = versionC;
 				}
 
