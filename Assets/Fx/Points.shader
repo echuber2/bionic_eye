@@ -65,6 +65,7 @@
 		
 		 float4 f = tex2D(_DotTex, float2(dist, 1 - intensity));
 		 return f;
+
 		 float w = f.r;
 		 return float4(w, w, w, 1);
 
@@ -111,22 +112,26 @@
 		//float2 nearestPoint = floor(i.uv*_DotFreq) / _DotFreq;
 		//nearestPoint += 0.5*_DotFreq;
 
+		float ninth = 0.11f; // (1/9)
+		ninth = 1; // disable
+
 		float4 acc = float4(0, 0, 0, 0);
 			
-			acc += calcColor(i.uv, nearestPoint);
+			acc += calcColor(i.uv, nearestPoint)*ninth;
 		
 			
-		const float w = _DotFreq;
-		/*
-		acc += calcColor(i.uv, nearestPoint + float2(-w, 0));
-		acc += calcColor(i.uv, nearestPoint + float2(w, 0));
-		acc += calcColor(i.uv, nearestPoint + float2(0, w));
-		acc += calcColor(i.uv, nearestPoint + float2(0, -w));
-		acc += calcColor(i.uv, nearestPoint + float2(-w, w));
-		acc += calcColor(i.uv, nearestPoint + float2(w, w));
-		acc += calcColor(i.uv, nearestPoint + float2(-w, -w));
-		acc += calcColor(i.uv, nearestPoint + float2(w, -w));
-		*/
+		const float w = _DotFreq + 0.1;
+		
+		// acc += calcColor(i.uv, nearestPoint + float2(-w, 0))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(w, 0))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(0, w))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(0, -w))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(-w, w))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(w, w))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(-w, -w))*ninth;
+		// acc += calcColor(i.uv, nearestPoint + float2(w, -w))*ninth;
+		
+		acc = max(acc, calcColor(i.uv, nearestPoint + float2(-w, 0))); // this was missing, I think
 		acc = max(acc, calcColor(i.uv, nearestPoint + float2(w, 0)));
 		acc = max(acc, calcColor(i.uv, nearestPoint + float2(0, w)));
 		acc = max(acc, calcColor(i.uv, nearestPoint + float2(0, -w)));
@@ -136,6 +141,9 @@
 		acc = max(acc,	calcColor(i.uv, nearestPoint + float2(w, -w)));
 
 		acc /= acc.a;
+		// acc = pow(acc,0.5);
+		acc = 2 * (acc/(1+acc));
+		acc = 2 * (acc/(1+acc));
 
 		return  acc ;
 	}
