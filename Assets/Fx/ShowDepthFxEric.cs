@@ -12,6 +12,7 @@ public class ShowDepthFxEric : ImageEffectBase
         return val - (float)((int)val);
     }
 
+    public bool doDepthCycling;
     public bool animateClipPlanes = false;
     public float nearMin = 0.1f;
     public float farMax = 40.0f;
@@ -41,6 +42,7 @@ public class ShowDepthFxEric : ImageEffectBase
             cam.farClipPlane = farMax;
         }
         material.SetInt("animateClipPlanes", animateClipPlanesInt);
+        material.SetInt("doDepthCycling", doDepthCycling ? 1 : 0);
 	}
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {

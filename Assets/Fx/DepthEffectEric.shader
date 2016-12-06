@@ -44,6 +44,7 @@
 			sampler2D _CameraDepthTexture;
 			float _Speed;
 			int animateClipPlanes;
+			int doDepthCycling;
 			fixed4 frag (v2f i) : SV_Target
 			{
 				float de = tex2D(_CameraDepthTexture, i.uv).r;
@@ -53,6 +54,7 @@
 				// x = LinearEyeDepth(3);
 				// float x = depth*.02;
 				float timeval = frac((_Time.y+1)/1.5);
+				if (!doDepthCycling) timeval = 1;
 				float x = 1-depth; // get white:near, black:far
 				float versionA;
 				float versionB;

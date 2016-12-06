@@ -51,6 +51,7 @@
 	float4 calcColor(float2 uv, float2 key) {
 
 		float4 col = tex2D(_MainTex, key); // sample the main texture (underlying effects)
+
 		//return col;
 		float2 offset = (uv - key)*_DotSize; // vec from pt to cell center in DotSize units
 
@@ -61,11 +62,28 @@
 		//return float4(offset,0,1);
 		//return float4(dist,dist,dist,1);
 
-		// green weight shouldn't matter for grayscale, but anyway:
-		float intensity = saturate(dot(col, float4(0.3, 0.4, 0.3, 0)));
+		// // green weight shouldn't matter for grayscale, but anyway:
+		// float intensity = saturate(dot(col, float4(0.3, 0.4, 0.3, 0)));
+		// // sample the value from the dot lookup texture, designed to give gaussian falloff:
+		// float4 f = tex2D(_DotTex, float2(dist, 1 - intensity));
 
-		// sample the value from the dot lookup texture, designed to give gaussian falloff:
-		float4 f = tex2D(_DotTex, float2(dist, 1 - intensity));
+		// METHOD 1: cell center value falls off with normal distribution
+		//    using fixed Gaussian falloff
+		// float stdev = .3; // .3 looked okay
+		// float pdf = 1/(stdev*sqrt(2*3.14159))*exp(-(dist*dist)/(2*stdev*stdev));
+		// float val = col*pdf;
+		// float4 f = float4(val,val,val,1);
+
+		// METHOD 2: cell center value determines the falloff stdev as well.
+		// Mapped range: min to max
+		float min_sigma = 0.001;
+		float max_sigma = 0.5;
+		float sigma_range = max_sigma-min_sigma;
+		float stdev = min_sigma + col*sigma_range;
+		float pdf = 1/(stdev*sqrt(2*3.14159))*exp(-(dist*dist)/(2*stdev*stdev));
+		float val = col*pdf;
+		float4 f = float4(val,val,val,1);
+
 		return f;
 
 		// float w = f.r;
@@ -109,45 +127,71 @@
 		nearestPoint = floor(nearestPoint/_DotFreq)+0.5;
 		nearestPoint *= _DotFreq;
 
-
-
 		//float2 nearestPoint = floor(i.uv*_DotFreq) / _DotFreq;
 		//nearestPoint += 0.5*_DotFreq;
 
 		float cell_weight = 0.11f; // (1/9)
 		cell_weight = 1; // full weight
-		const float w = _DotFreq + 0.1; // small offset to avoid screen-door
+		const float w = _DotFreq; // + 0.1; // small offset to avoid screen-door
 
 		float4 acc = float4(0, 0, 0, 0);
-		acc += calcColor(i.uv, nearestPoint)*cell_weight;
+		acc += calcColor(i.uv, nearestPoint	)*cell_weight;
+		float4 alt_acc = acc;
+		float col;
+		float nbor_min = acc;
 
 		// Version that sums contributions
-		// acc += calcColor(i.uv, nearestPoint + float2(-w, 0))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(w, 0))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(0, w))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(0, -w))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(-w, w))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(w, w))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(-w, -w))*cell_weight;
-		// acc += calcColor(i.uv, nearestPoint + float2(w, -w))*cell_weight;
+		col = calcColor(i.uv, nearestPoint + float2(-w, 0))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(w, 0))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(0, w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(0, -w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(-w, w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(w, w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(-w, -w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		col = calcColor(i.uv, nearestPoint + float2(w, -w))*cell_weight;
+		acc += col;
+		nbor_min = min(nbor_min,col);
+		// acc /= acc.a;
+		acc.a = 1;
 
 		// Version that takes max contribution of any neighbor:
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(-w, 0))); // this was missing, I think
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(w, 0)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(0, w)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(0, -w)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(-w, w)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(w, w)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(-w, -w)));
-		// acc = max(acc, calcColor(i.uv, nearestPoint + float2(w, -w)));
-		// acc /= acc.a;
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(-w, 0))); // this was missing, I think
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(w, 0)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(0, w)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(0, -w)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(-w, w)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(w, w)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(-w, -w)));
+		// alt_acc = max(alt_acc, calcColor(i.uv, nearestPoint + float2(w, -w)));
+		// alt_acc.a = 1;
 
-		acc *= 10;
-		// acc = pow(acc,.5);
-		acc = 2 * (acc/(1+acc));
-		acc = 2 * (acc/(1+acc));
+		// acc = max(acc,alt_acc);
 
-		return  acc ;
+		// simple gaussian filter boost
+		{
+			// acc *= 9;
+			// acc = saturate(acc*9*(nbor_min));
+			// acc = pow(acc,.5);
+		}
+
+		// acc = 2 * (acc/(1+acc));
+		// acc = 2 * (acc/(1+acc));
+
+		return saturate(acc);
 	}
 		ENDCG
 	}
