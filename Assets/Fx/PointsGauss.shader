@@ -3,7 +3,7 @@
 	Properties
 	{
 		_MainTex("Texture", 2D) = "white" {}
-	_DotTex("Dot", 2D) = "white" {}
+	// _DotTex("Dot", 2D) = "white" {}
 	_DotSize("Dot Freq", Float) = 1 // not implemented
 	_DotFreq("Dot Freq", Float) = 10
 	}
@@ -35,9 +35,12 @@
 	float _DotFreq, _DotSize;
 	sampler2D _MainTex;
 
-	sampler2D _DotTex;
+	// sampler2D _DotTex;
 
 	float4 _MainTex_ST;
+
+	float numDots;
+	int useHexMode;
 
 	v2f vert(appdata v)
 	{
@@ -47,8 +50,14 @@
 		return o;
 	}
 
-
 	float4 calcColor(float2 uv, float2 key) {
+
+		// adding in Ada's hex hack
+		if (useHexMode) {
+			if (floor(key * numDots).y % 2 == 0) {
+				key.x = key.x - 0.5*_DotFreq;
+			}
+		}
 
 		float4 col = tex2D(_MainTex, key); // sample the main texture (underlying effects)
 
@@ -123,7 +132,6 @@
 
 		float2 nearestPoint = i.uv;
 
-
 		nearestPoint = floor(nearestPoint/_DotFreq)+0.5;
 		nearestPoint *= _DotFreq;
 
@@ -136,35 +144,35 @@
 
 		float4 acc = float4(0, 0, 0, 0);
 		acc += calcColor(i.uv, nearestPoint	)*cell_weight;
-		float4 alt_acc = acc;
+		// float4 alt_acc = acc;
 		float col;
-		float nbor_min = acc;
+		// float nbor_min = acc;
 
 		// Version that sums contributions
 		col = calcColor(i.uv, nearestPoint + float2(-w, 0))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(w, 0))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(0, w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(0, -w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(-w, w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(w, w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(-w, -w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		col = calcColor(i.uv, nearestPoint + float2(w, -w))*cell_weight;
 		acc += col;
-		nbor_min = min(nbor_min,col);
+		// nbor_min = min(nbor_min,col);
 		// acc /= acc.a;
 		acc.a = 1;
 
@@ -188,8 +196,10 @@
 			// acc = pow(acc,.5);
 		}
 
+		// Reinhard operator experiments
 		// acc = 2 * (acc/(1+acc));
 		// acc = 2 * (acc/(1+acc));
+		// acc = 1/(((1+acc)/(2*acc+0.01))+0.01);
 
 		return saturate(acc);
 	}
