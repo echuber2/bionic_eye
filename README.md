@@ -1,2 +1,3 @@
 # bionic_eye
-A retinal implant simulator for gearvr.
+A retinal implant simulator shader for Unity.
+Proof of concept for a class project.
